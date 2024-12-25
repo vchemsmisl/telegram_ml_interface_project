@@ -11,8 +11,8 @@ class TgBot:
 		self.bot = telebot.TeleBot(BOT_TOKEN)
 		self.name = 'vchemsmisl_bot'
 
-	def start_bot(self):
-		self.bot.infinity_polling()
+	# def start_bot(self):
+	# 	self.bot.infinity_polling()
 
 	def start(self):
 
@@ -22,6 +22,7 @@ class TgBot:
 
 			if message.text in ['/start', '/help']:
 				self.bot.send_message(chat_id, STARTING_MESSAGE_TRUE)
+				
 			else:
 				self.bot.send_message(chat_id, STARTING_MESSAGE_FALSE)
 

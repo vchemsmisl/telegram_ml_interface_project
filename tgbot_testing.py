@@ -3,12 +3,14 @@ from constants import (
 	BOT_TOKEN,
     DATA_PATH,
     SUPPORTED_DATASET_TYPES,
-    AVAILABLE_MODELS
+    AVAILABLE_MODELS,
+    AVAILABLE_TASK_TYPES
 )
 import messages
 from telebot import types
 import requests
 import wget
+import re
 
 #эти переменные будут в конфиге, который мы будем создавать в поле класса бота
 task_type = None
@@ -32,7 +34,7 @@ def start_working_poll(message):
         bot.send_message(chat_id, messages.STARTING_MESSAGE_FALSE)
 
         
-@bot.callback_query_handler()
+@bot.callback_query_handler(func=lambda call: call.data == 'any')
 def ask_for_dataset_poll(call):
     bot.send_message(call.message.chat.id, messages.ASKING_FOR_DATASET_MESSAGE)
 
@@ -72,33 +74,34 @@ def get_dataset_and_ask_for_task_type_poll(message):
     keyboard.add(key_multilable_classif)
 
     bot.send_message(message.chat.id, text=messages.ASKING_FOR_TASK_TYPE_MESSAGE, reply_markup=keyboard)
-    bot.register_next_step_handler(message, ask_for_test_set_proportion_poll)
 
-@bot.callback_query_handler()
+@bot.callback_query_handler(func=lambda call: call.data in AVAILABLE_TASK_TYPES)
 def ask_for_test_set_proportion_poll(call):
     global task_type # убрать при реализации в классе
     task_type = call.data
     bot.send_message(call.message.chat.id, messages.ASKING_FOR_TEST_PROPORTION_MESSAGE)
 
-@bot.message_handler(content_types=['text'])
+    bot.register_next_step_handler(call.message, get_test_proportion_and_ask_for_models_list_poll)
+
 def get_test_proportion_and_ask_for_models_list_poll(message):
 
     while True:
         test_proportion_input = message.text
 
-        if test_proportion_input.isnumeric() and 0 <= float(test_proportion_input) <= 1:
+        if re.fullmatch(r'\d+\.\d+', test_proportion_input) and 0 <= float(test_proportion_input) <= 1:
             break
         else:
             bot.send_message(message.chat.id, messages.WRONG_TEST_PROPORTION_MESSAGE)
             bot.register_next_step_handler(message, get_test_proportion_and_ask_for_models_list_poll)
-            break
+            return
 
     global test_proportion # убрать при реализации в классе
     test_proportion = float(test_proportion_input)
 
     bot.send_message(message.chat.id, messages.ASKING_FOR_MODELS_MESSAGE)
 
-@bot.message_handler(content_types=['text'])
+    bot.register_next_step_handler(message, get_models_names_and_ask_for_timeout_poll)
+
 def get_models_names_and_ask_for_timeout_poll(message):
     models_input = message.text.split(', ')
 
@@ -109,7 +112,7 @@ def get_models_names_and_ask_for_timeout_poll(message):
             else:
                 bot.send_message(message.chat.id, messages.WRONG_MODEL_NAME_MESSAGE)
                 bot.register_next_step_handler(message, get_models_names_and_ask_for_timeout_poll)
-                break
+                return
         break
 
     global models # убрать при реализации в классе
@@ -117,7 +120,8 @@ def get_models_names_and_ask_for_timeout_poll(message):
 
     bot.send_message(message.chat.id, messages.ASKING_FOR_TIMEOUT_MESSAGE)
 
-@bot.message_handler(content_types=['text'])
+    bot.register_next_step_handler(message, get_timeout_and_start_training_poll)
+
 def get_timeout_and_start_training_poll(message):
 
     while True:
@@ -128,7 +132,7 @@ def get_timeout_and_start_training_poll(message):
         else:
             bot.send_message(message.chat.id, messages.WRONG_TIMEOUT_MESSAGE)
             bot.register_next_step_handler(message, get_timeout_and_start_training_poll)
-            break
+            return
 
     global timeout
     timeout = float(timeout_input)

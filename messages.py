@@ -2,17 +2,17 @@ STARTING_MESSAGE_TRUE = '''
 Welcome to the Simple ML Interface bot!
 Let's begin.
 '''
-STARTING_MESSAGE_FALSE = 'Please enter "/start" or "/help" command'
+STARTING_MESSAGE_FALSE = 'Please enter "/start" or "/help" command!'
 ASKING_FOR_DATASET_MESSAGE = '''
 Send the dataset with features and target values.
-Supported formats: .xlsx, .csv (possible delimiters: comma, semicolon), .tsv.
+Supported formats: .csv
 File size must be not more than 20 MB.
 Also please set the name of your target column to "target".
 '''
 WRONG_FILE_TYPE_MESSAGE = '''
 Wrong file type! 
 Send the file in one of the supported formats:
-Supported formats: .xlsx, .csv (possible delimiters: comma, semicolon), .tsv.
+Supported formats: .csv 
 '''
 ASKING_FOR_TASK_TYPE_MESSAGE = '''
 Now choose the type of task, for which the model will be trained.
@@ -34,7 +34,7 @@ Possible variants are:
 Otherwise, if you want AutoML to define working model based on your data, please enter "auto".
 '''
 WRONG_MODEL_NAME_MESSAGE = '''
-One of the model names you entered is wrong. Please try again.
+One of the model names you entered is wrong! Please try again.
 
 Possible variants are: 
 1. lgb, 2. lgb_tuned, 3. linear_l2, 4. cb, 5. cb_tuned.
