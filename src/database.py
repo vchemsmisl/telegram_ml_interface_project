@@ -28,7 +28,11 @@ class SQLiteConnector:
         try:
             cursor.execute(query)
             result = cursor.fetchall()
-            return result
+            try:
+                names = [description[0] for description in cursor.description]
+                return result, names
+            except TypeError:
+                return
 
         except Error as e:
             raise ConnectionToDatabaseError(f"The error '{e}' occurred")
@@ -72,20 +76,20 @@ class SQLiteDatabase:
     def get_target(self):
 
         get_target_query = f"SELECT target FROM {self.database_name}"
-        raw_target = self.connector.execute_query(get_target_query)
+        raw_target, target_column_name = self.connector.execute_query(get_target_query)
         iter_get_target_generator = iter(self._get_raw_target_generator(raw_target))
 
-        return self._numpy_array_creation_from_raw(iter_get_target_generator)
+        return self._numpy_array_creation_from_raw(iter_get_target_generator), target_column_name
 
     def get_features(self):
         drop_target_query = f"ALTER TABLE {self.database_name} DROP COLUMN target"
         self.connector.execute_query(drop_target_query)
 
         get_features_query = f"SELECT * FROM {self.database_name}"
-        raw_features = self.connector.execute_query(get_features_query)
+        raw_features, features_columns_names = self.connector.execute_query(get_features_query)
         iter_get_features_generator = iter(self._get_raw_features_generator(raw_features))
 
-        return self._numpy_array_creation_from_raw(iter_get_features_generator)
+        return self._numpy_array_creation_from_raw(iter_get_features_generator), features_columns_names
 
     def add_predictions_column(self, predictions):
         pass

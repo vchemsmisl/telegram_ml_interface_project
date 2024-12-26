@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from constants import RANDOM_STATE, N_FOLDS, DATA_PATH
+from src.constants import RANDOM_STATE, N_FOLDS, TRAINING_REPORT_PATH
 from lightautoml.automl.presets.tabular_presets import TabularUtilizedAutoML
 from lightautoml.report.report_deco import ReportDecoUtilized
 from lightautoml.tasks import Task
@@ -10,6 +10,7 @@ class ModelConfigBase(ABC):
     def __init__(self):
         self.task_type = ''
         self.test_proportion = 0
+        self.doc_type = ''
 
     @abstractmethod
     def fill_task_type(self, task_type):
@@ -17,6 +18,10 @@ class ModelConfigBase(ABC):
 
     @abstractmethod
     def fill_test_proportion(self, test_proportion):
+        pass
+
+    @abstractmethod
+    def fill_doc_type(self, doc_type):
         pass
 
 
@@ -39,6 +44,9 @@ class AutoMLModelConfig(ModelConfigBase):
     def fill_timeout(self, timeout):
         self.timeout = timeout
 
+    def fill_doc_type(self, doc_type):
+        self.doc_type = doc_type
+
 
 class ModelEmployerBase(ABC):
 
@@ -51,7 +59,7 @@ class ModelEmployerBase(ABC):
         pass
 
     @abstractmethod
-    def train_model(self, X_train, y_train, X_val, y_val):
+    def train_model(self, train_data, val_data):
         pass
 
     @abstractmethod
@@ -67,7 +75,7 @@ class AutoMLModelEmployer(ModelEmployerBase):
 
         task = Task(self.model_config.task_type)
         report_decorator = ReportDecoUtilized(
-            output_path=DATA_PATH.absolute().as_posix() + 'model_training_report'
+            output_path=TRAINING_REPORT_PATH.absolute().as_posix()
         )
 
         self.model = report_decorator(
@@ -79,15 +87,12 @@ class AutoMLModelEmployer(ModelEmployerBase):
             )
         )
 
-    def train_model(self, X_train, y_train, X_val, y_val):
-
-        train_data = # объединить train
-        val_data = # объединить val
+    def train_model(self, train_data, val_data):
 
         roles = {'target': 'target'}
         numpy.random.seed(RANDOM_STATE)
 
-        pred = self.model.fit_predict(
+        _ = self.model.fit_predict(
             train_data,
             roles=roles,
             valid_data=val_data,
@@ -98,4 +103,3 @@ class AutoMLModelEmployer(ModelEmployerBase):
 
         predictions = self.model.predict(test_data).data.flatten().round()
         return predictions
-
