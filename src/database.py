@@ -2,6 +2,8 @@ import sqlite3
 from sqlite3 import Error
 import pandas
 import numpy
+from pathlib import Path
+from constants import DATABASE_PATH
 
 class ConnectionToDatabaseError(Exception):
     """Raised when the connection to SQLite database fails"""
@@ -9,8 +11,8 @@ class ConnectionToDatabaseError(Exception):
 
 class SQLiteConnector:
 
-    def __init__(self, database_path):
-        self.database_path = database_path
+    def __init__(self):
+        self.database_path = DATABASE_PATH
         self.connection = self.create_connection()
 
     def create_connection(self):
@@ -40,8 +42,8 @@ class SQLiteConnector:
 
 class SQLiteDatabase:
 
-    def __init__(self, database_path, dataset_path):
-        self.connector = SQLiteConnector(database_path)
+    def __init__(self, dataset_path):
+        self.connector = SQLiteConnector()
         self.dataset_path = dataset_path
         self.database_name = 'database_for_training'
 
@@ -49,7 +51,17 @@ class SQLiteDatabase:
         dataframe = pandas.read_csv(self.dataset_path).drop('Unnamed: 0', axis=1)
 
         dataframe.to_sql(name=self.database_name,
-                         con=self.connector.connection)
+                         con=self.connector.connection,
+                         if_exists='replace')
+
+        # try:
+        #     dataframe.to_sql(name=self.database_name,
+        #                      con=self.connector.connection,
+        #                      if_exists='replace')
+        # except ValueError:
+        #     Path(DATABASE_PATH).unlink()
+        #     dataframe.to_sql(name=self.database_name,
+        #                      con=self.connector.connection)
 
     @staticmethod
     def _get_raw_target_generator(raw_target):

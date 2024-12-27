@@ -1,26 +1,26 @@
-from src.tgbot import TgBot
 from src.model import AutoMLModelConfig, AutoMLModelEmployer
 from src.database import SQLiteDatabase
-from src.constants import DATA_PATH, DATABASE_PATH, RANDOM_STATE
+from constants import DATA_PATH, DATABASE_PATH, RANDOM_STATE, TRAINING_REPORT_PATH
 from sklearn.model_selection import train_test_split
 import pandas
 import numpy
+import shutil
 
-class AutoMLBotFacade:
+class ModelTrainingFacade:
 
-    def __init__(self):
-        self.config = AutoMLModelConfig()
-        self.bot = TgBot(self.config)
+    def __init__(self, filled_config):
+        self.config = filled_config
+        # self.bot = TgBot(self.config)
         self.database = None
         self.model = None
 
-    def collect_data_and_parameters(self):
-        self.bot.request_parameters_from_user()
+    # def collect_data_and_parameters(self):
+    #     self.bot.request_parameters_from_user()
         # self.bot.start_infinity_polling()
 
     def prepare_data(self):
         path_to_dataset = f'{DATA_PATH.absolute().as_posix()}/data_for_training.{self.config.doc_type}'
-        self.database = SQLiteDatabase(DATABASE_PATH, path_to_dataset)
+        self.database = SQLiteDatabase(path_to_dataset)
         self.database.create_database()
 
         target, target_column_name = self.database.get_target()
@@ -46,5 +46,10 @@ class AutoMLBotFacade:
         self.model = AutoMLModelEmployer(self.config)
         self.model.configure_model()
         self.model.train_model(train_data, val_data)
+        self._training_report_to_zip()
 
-    def send_training_report(self):
+    @staticmethod
+    def _training_report_to_zip():
+        shutil.make_archive(base_name=TRAINING_REPORT_PATH,
+                            format='zip',
+                            root_dir=TRAINING_REPORT_PATH)

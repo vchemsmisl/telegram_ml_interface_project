@@ -1,10 +1,14 @@
 import telebot
-from src.constants import (
+
+import src.messages
+from src.facade import ModelTrainingFacade
+from constants import (
 	BOT_TOKEN,
     DATA_PATH,
     SUPPORTED_DATASET_TYPES,
     AVAILABLE_MODELS,
-    AVAILABLE_TASK_TYPES
+    AVAILABLE_TASK_TYPES,
+	TRAINING_REPORT_PATH
 )
 import src.messages as messages
 from telebot import types
@@ -13,6 +17,7 @@ import requests
 import wget
 import re
 import time
+import shutil
 
 def singleton_class(cls):
 
@@ -45,10 +50,10 @@ class TgBot:
 		self.thread.start()
 
 	def stop_bot(self):
-		time.sleep(10)
+		time.sleep(90)
 		self.stop_event.set()
 
-	def request_parameters_from_user(self):
+	def execute_model_training_bot_interface(self):
 
 		@self.bot.message_handler(content_types=['text'])
 		def start_working_poll(message):
@@ -87,8 +92,9 @@ class TgBot:
 				f'https://api.telegram.org/file/bot{BOT_TOKEN}/{file_info.file_path}'
 			).url
 
-			if not DATA_PATH.exists():
-				DATA_PATH.mkdir(parents=True)
+			if DATA_PATH.exists():
+				shutil.rmtree(DATA_PATH)
+			DATA_PATH.mkdir(parents=True)
 			wget.download(file_url, out=DATA_PATH.absolute().as_posix() + f'/data_for_training.{doc_type}')
 
 			keyboard = types.InlineKeyboardMarkup()
@@ -167,11 +173,19 @@ class TgBot:
 
 			self.bot.send_message(self.chat_id, messages.MODEL_TRAINING_START_MESSAGE)
 
+			self.execute_model_training()
+			self.contact_user_after_training()
 
-	def get_filled_config(self):
-		return self.model_config
+	def execute_model_training(self):
+		model_training_executor = ModelTrainingFacade(self.model_config)
+		train_data, val_data = model_training_executor.prepare_data()
+		print(train_data.head())
+		print(val_data.head())
+		model_training_executor.create_and_train_model(train_data, val_data)
 
 	def contact_user_after_training(self):
 
-		pdf_doc = open('Исаков Данила Андреевич_резюме.pdf', 'rb')
-		self.bot.send_document(self.chat_id, pdf_doc)
+		self.bot.send_message(self.chat_id,src.messages.TRAINING_FINISHED_MESSAGE)
+
+		zip_file = open(DATA_PATH.absolute().as_posix() + '/model_training_report.zip', 'rb')
+		self.bot.send_document(self.chat_id, zip_file)

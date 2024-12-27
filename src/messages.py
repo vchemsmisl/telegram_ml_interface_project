@@ -53,3 +53,8 @@ Great! We have set all the necessary parameters and starting to train your AutoM
 Now all you have to do is wait! The process will take several minutes.
 When everything is ready, we will provide you with training results and a trained model.
 '''
+TRAINING_FINISHED_MESSAGE = '''
+Congratulations!
+We've just finished training AutoML model on your data.
+In the following document you'll find the detailed report on model training.
+'''

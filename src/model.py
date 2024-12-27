@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.constants import RANDOM_STATE, N_FOLDS, TRAINING_REPORT_PATH
+from constants import RANDOM_STATE, N_FOLDS, TRAINING_REPORT_PATH
 from lightautoml.automl.presets.tabular_presets import TabularUtilizedAutoML
 from lightautoml.report.report_deco import ReportDecoUtilized
 from lightautoml.tasks import Task
