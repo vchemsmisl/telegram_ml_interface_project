@@ -2,11 +2,17 @@ import sqlite3
 from sqlite3 import Error
 import pandas
 import numpy
-from pathlib import Path
+from typing import Iterator
 from constants import DATABASE_PATH
 
 class ConnectionToDatabaseError(Exception):
     """Raised when the connection to SQLite database fails"""
+    pass
+
+class NotIteratorError(Exception):
+    """
+    Raised when a function, that a function for array building receives, is not an instance of Iterator
+    """
     pass
 
 class SQLiteConnector:
@@ -54,15 +60,6 @@ class SQLiteDatabase:
                          con=self.connector.connection,
                          if_exists='replace')
 
-        # try:
-        #     dataframe.to_sql(name=self.database_name,
-        #                      con=self.connector.connection,
-        #                      if_exists='replace')
-        # except ValueError:
-        #     Path(DATABASE_PATH).unlink()
-        #     dataframe.to_sql(name=self.database_name,
-        #                      con=self.connector.connection)
-
     @staticmethod
     def _get_raw_target_generator(raw_target):
         for val in raw_target:
@@ -75,6 +72,8 @@ class SQLiteDatabase:
 
     @staticmethod
     def _numpy_array_creation_from_raw(iter_function):
+        if not isinstance(iter_function, Iterator):
+            raise NotIteratorError('The received function is not an iterator')
 
         array = []
         while True:

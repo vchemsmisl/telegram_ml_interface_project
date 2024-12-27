@@ -5,6 +5,12 @@ from lightautoml.report.report_deco import ReportDecoUtilized
 from lightautoml.tasks import Task
 import numpy
 
+class EmptyConfigError(Exception):
+    """
+    Raised when one of the config parameters is unfilled.
+    """
+    pass
+
 class ModelConfigBase(ABC):
 
     def __init__(self):
@@ -51,6 +57,13 @@ class AutoMLModelConfig(ModelConfigBase):
 class ModelEmployerBase(ABC):
 
     def __init__(self, model_config):
+        if (model_config.models == []) or \
+                (model_config.timeout == 0) or \
+                (model_config.task_type == '') or \
+                (model_config.doc_type == '') or \
+                (model_config.test_proportion == 0):
+            raise EmptyConfigError('One of parameters in config is unfilled')
+
         self.model_config = model_config
         self.model = None
 

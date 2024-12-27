@@ -1,6 +1,6 @@
 import telebot
 
-import src.messages
+import messages
 from src.facade import ModelTrainingFacade
 from constants import (
 	BOT_TOKEN,
@@ -8,15 +8,11 @@ from constants import (
     SUPPORTED_DATASET_TYPES,
     AVAILABLE_MODELS,
     AVAILABLE_TASK_TYPES,
-	TRAINING_REPORT_PATH
 )
-import src.messages as messages
 from telebot import types
-from threading import Thread, Event
 import requests
 import wget
 import re
-import time
 import shutil
 
 def singleton_class(cls):
@@ -39,19 +35,9 @@ class TgBot:
 		self.model_config = model_config
 		self.name = 'vchemsmisl_bot'
 		self.chat_id = None
-		self.thread = None
-		self.stop_event = Event()
 
 	def start_infinity_polling(self):
 		self.bot.infinity_polling(skip_pending=True)
-
-	def start_bot(self):
-		self.thread = Thread(target=self.start_infinity_polling)
-		self.thread.start()
-
-	def stop_bot(self):
-		time.sleep(90)
-		self.stop_event.set()
 
 	def execute_model_training_bot_interface(self):
 
@@ -185,7 +171,7 @@ class TgBot:
 
 	def contact_user_after_training(self):
 
-		self.bot.send_message(self.chat_id,src.messages.TRAINING_FINISHED_MESSAGE)
+		self.bot.send_message(self.chat_id, messages.TRAINING_FINISHED_MESSAGE)
 
 		zip_file = open(DATA_PATH.absolute().as_posix() + '/model_training_report.zip', 'rb')
 		self.bot.send_document(self.chat_id, zip_file)
